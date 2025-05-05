@@ -1,33 +1,59 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Lab 4 — FastAPI + JS</title>
+  <title>Lab 4 — Static + JS</title>
 </head>
 <body>
-  <h1>Форма отправки</h1>
-  <form id="userForm">
-    <label>Имя: <input type="text" name="name" /></label><br />
-    <label>Email: <input type="email" name="email" /></label><br />
-    <button type="submit">Отправить</button>
+  <h2>Логин</h2>
+  <form id="loginForm">
+    <input name="username" placeholder="логин" />
+    <input name="password" type="password" placeholder="пароль" />
+    <button>Войти</button>
   </form>
-  <p id="result"></p>
+
+  <h2>Форма</h2>
+  <form id="dataForm">
+    <input name="name" placeholder="Имя" />
+    <input name="email" placeholder="Email" />
+    <button>Отправить</button>
+  </form>
+
+  <pre id="result"></pre>
 
   <script>
-    const form = document.getElementById("userForm");
-    form.addEventListener("submit", async (e) => {
+    let token = "";
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
-
-      const response = await fetch("http://127.0.0.1:8000/api/submit", {
+      const fd = new FormData(e.target);
+      const res = await fetch("/token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: fd
       });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.access_token;
+        alert("Авторизация успешна!");
+      } else {
+        alert("Ошибка авторизации");
+      }
+    });
 
-      const result = await response.json();
-      document.getElementById("result").textContent = JSON.stringify(result);
+    document.getElementById("dataForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = Object.fromEntries(fd.entries());
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      document.getElementById("result").textContent = JSON.stringify(json, null, 2);
     });
   </script>
 </body>
